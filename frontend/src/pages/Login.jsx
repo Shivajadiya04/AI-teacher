@@ -1,51 +1,95 @@
-import React, { useState } from "react";
+// src/pages/Login.jsx
+import React, { useState } from 'react';
+import bgImage from '../assets/charlesdeluvio-rRWiVQzLm7k-unsplash.jpg';
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState("");
+  const [form, setForm] = useState({ email: '', password: '', agree: false });
+  const [msg, setMsg] = useState('');
 
-  const handleLogin = async () => {
+  const handleChange = (e) => {
+    const { name, type, value, checked } = e.target;
+    setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!form.agree) return setMsg('You must agree to the Terms & Conditions');
     try {
-      const res = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, password: form.password }),
       });
       const data = await res.json();
-      if (data.success) {
-        setMsg("Login successful!");
-      } else {
-        setMsg(data.message);
-      }
+      if (data.success) setMsg('Login successful!');
+      else setMsg(data.message || 'Login failed.');
     } catch {
-      setMsg("Something went wrong");
+      setMsg('Something went wrong.');
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-lg w-96">
-        <h2 className="text-2xl font-bold mb-4">Login</h2>
-        <input
-          type="email"
-          placeholder="Email"
-          className="w-full p-2 border mb-4"
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full p-2 border mb-4"
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <button
-          onClick={handleLogin}
-          className="bg-blue-600 text-white px-4 py-2 w-full rounded"
+    <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="bg-gray-800 text-white rounded-2xl shadow-lg flex w-[95%] max-w-6xl overflow-hidden">
+        
+        {/* Left Panel with Background Image */}
+        <div
+          className="w-1/2 bg-cover bg-center relative"
+          style={{ backgroundImage: `url(${bgImage})` }}
         >
-          Login
-        </button>
-        <p className="text-center mt-4 text-red-500">{msg}</p>
+          <p className="absolute bottom-6 left-6 text-white text-3xl font-bold leading-tight">
+            Prepare, Clear, and grab the Job
+          </p>
+        </div>
+
+        {/* Right Form */}
+        <div className="w-1/2 p-12">
+          <h2 className="text-3xl font-semibold mb-6">Log in</h2>
+          <p className="mb-4 text-sm">
+            Don't have an account? <a href="/register" className="text-purple-400 underline">Sign up</a>
+          </p>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              type="email"
+              placeholder="Email"
+              className="w-full p-3 rounded bg-gray-700"
+              required
+            />
+            <input
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              type="password"
+              placeholder="Password"
+              className="w-full p-3 rounded bg-gray-700"
+              required
+            />
+            <div className="flex items-center text-sm">
+              <input
+                type="checkbox"
+                name="agree"
+                checked={form.agree}
+                onChange={handleChange}
+                className="mr-2"
+              />
+              <label>
+                I agree to the <a href="#" className="underline text-purple-400">Terms & Conditions</a>
+              </label>
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-purple-500 hover:bg-purple-600 p-3 rounded text-white font-semibold"
+            >
+              Log in
+            </button>
+          </form>
+
+          {msg && <p className="mt-4 text-sm text-center text-red-400">{msg}</p>}
+        </div>
       </div>
     </div>
   );
