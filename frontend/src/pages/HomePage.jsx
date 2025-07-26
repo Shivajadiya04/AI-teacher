@@ -1,0 +1,158 @@
+import React from "react";
+import { motion } from "framer-motion";
+import Logo from "/LOGO.svg";
+import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
+
+const features = [
+  {
+    title: "Smart Practice",
+    desc: "AI-generated quizzes & feedback",
+    icon: "🧠",
+  },
+  {
+    title: "Voice Assistant",
+    desc: "Talk with your learning buddy",
+    icon: "🎙️",
+  },
+  {
+    title: "Track Progress",
+    desc: "Detailed analytics dashboard",
+    icon: "📊",
+  },
+  {
+    title: "Instant Help",
+    desc: "24/7 AI learning support",
+    icon: "⚡",
+  },
+];
+
+const HomePage = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-indigo-100 to-white flex flex-col">
+      {/* 🔹 Navbar */}
+      <nav className="w-full flex justify-between items-center px-8 py-4 bg-white shadow-md sticky top-0 z-50">
+        <div className="text-2xl font-bold text-indigo-600">AI Education</div>
+        <ul className="flex space-x-6 font-semibold text-gray-700">
+          <li className="hover:text-indigo-600 cursor-pointer">Home</li>
+          <li className="hover:text-indigo-600 cursor-pointer">Job Details</li>
+          <li className="hover:text-indigo-600 cursor-pointer">Roadmap</li>
+          <li className="hover:text-indigo-600 cursor-pointer">Dashboard</li>
+        </ul>
+      </nav>
+
+      {/* 🔹 Hero Section */}
+      <div className="flex-1 flex items-center justify-center px-4">
+        <div className="bg-white shadow-2xl rounded-3xl p-8 md:p-16 grid md:grid-cols-2 gap-8 max-w-6xl w-full items-center">
+          {/* Left Content */}
+          <div className="space-y-6">
+            <motion.h1
+              className="text-4xl md:text-5xl font-bold text-gray-800"
+              initial={{ opacity: 0, x: -60 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              Empower Learning with <br />
+              <span className="text-indigo-600">AI Education</span>
+            </motion.h1>
+
+            <motion.p
+              className="text-gray-600 text-lg"
+              initial={{ opacity: 0, x: -60 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              Discover smarter ways to study, practice and grow through our AI-based education tools.
+            </motion.p>
+
+            <motion.button
+              className="bg-indigo-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-indigo-700 transition duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Let's Start
+            </motion.button>
+          </div>
+
+          {/* Right Image */}
+          <motion.div
+            className="flex justify-center"
+            initial={{ opacity: 0, x: 60 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <img src={Logo} alt="Illustration" className="w-64 md:w-80" />
+          </motion.div>
+        </div>
+      </div>
+
+      {/* 🔸 Circular Feature Cards (Centered) */}
+      <div className="flex justify-center mt-20 mb-12 px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl w-full">
+          {features.map((item, index) => (
+            <motion.div
+              key={index}
+              className="bg-white rounded-full shadow-md p-6 flex flex-col items-center text-center border-2 border-indigo-200 hover:border-indigo-500 transition-all duration-300 cursor-pointer"
+              whileHover={{ scale: 1.05, rotate: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
+            >
+              <div className="text-4xl mb-2">{item.icon}</div>
+              <h3 className="text-lg font-semibold text-gray-800">{item.title}</h3>
+              <p className="text-sm text-gray-600">{item.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* 🔸 Career Direction Cards */}
+      <main className="flex flex-col items-center justify-center py-20 px-6">
+        <h2 className="text-4xl font-bold mb-12 text-center">Choose your career direction</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          {[
+            { title: 'Web Developer', delay: 0.1 },
+            { title: 'Data Scientist', delay: 0.2 },
+            { title: 'UI/UX Designer', delay: 0.3 },
+            { title: 'AI/ML Engineer', delay: 0.4 },
+            { title: 'DevOps Engineer', delay: 0.5 },
+            { title: 'Software Engineer', delay: 0.6 },
+          ].map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: item.delay }}
+              className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-cyan-400/20 transition duration-300"
+            >
+              <h3 className="text-xl font-semibold text-center">{item.title}</h3>
+            </motion.div>
+          ))}
+        </div>
+      </main>
+
+      {/* 🔹 Footer */}
+      <footer className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-8 px-4">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
+          <div className="text-xl font-bold mb-4 md:mb-0">© 2025 AI Education</div>
+          <div className="flex space-x-6 text-2xl">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+              <FaGithub className="hover:text-gray-300 transition" />
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+              <FaLinkedin className="hover:text-gray-300 transition" />
+            </a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+              <FaTwitter className="hover:text-gray-300 transition" />
+            </a>
+          </div>
+        </div>
+        <p className="text-center mt-4 text-sm opacity-80">
+          Designed with ❤️ to boost your learning experience
+        </p>
+      </footer>
+    </div>
+  );
+};
+
+export default HomePage;
