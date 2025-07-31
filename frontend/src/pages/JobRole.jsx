@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 
 const JobRole = () => {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     companyName: '',
     jobRole: '',
@@ -25,6 +28,13 @@ const JobRole = () => {
 
     setResult({ matched, lacking });
     setCompared(true);
+
+    // 💾 Save lacking skills in localStorage
+    localStorage.setItem('skillsYouHave', JSON.stringify(matched));
+  };
+
+  const handleTestRedirect = () => {
+    navigate('/entry-level-test');
   };
 
   return (
@@ -89,7 +99,7 @@ const JobRole = () => {
           )}
 
           <button
-            onClick={handleCompare}
+            onClick={compared ? handleTestRedirect : handleCompare}
             className="mt-4 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-6 py-2 rounded font-semibold w-full"
           >
             {compared ? 'Attempt Test' : 'Compare'}

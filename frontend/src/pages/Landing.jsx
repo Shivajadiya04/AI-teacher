@@ -143,7 +143,7 @@ export default Landing;*/
 
 import React from "react";
 import { useNavigate } from "react-router-dom"; // ✅ import this at top
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 import Logo from "/LOGO.svg";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
 

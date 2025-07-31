@@ -7,19 +7,20 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Sidebar from './components/Sidebar';
 import JobRole from './pages/JobRole';
-import HomePage from "./pages/HomePage"; // <== your new page
-
+import HomePage from './pages/HomePage';
+import EntryLevelTest from './pages/EntryLevelTest';
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Landing/>} />
+        <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/jobrole" element={<JobRole />} />
-           <Route path="/home" element={<HomePage />} /> 
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/entry-level-test" element={<EntryLevelTest />} />
       </Routes>
     </Router>
   );

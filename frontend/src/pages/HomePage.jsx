@@ -1,4 +1,5 @@
 import React from "react";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import Logo from "/LOGO.svg";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
