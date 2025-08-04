@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import JobRole from './pages/JobRole';
 import HomePage from './pages/HomePage';
 import EntryLevelTest from './pages/EntryLevelTest';
+import TestReview from './pages/TestReview';
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
         <Route path="/jobrole" element={<JobRole />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/entry-level-test" element={<EntryLevelTest />} />
+        <Route path="/review" element={<TestReview />} />
       </Routes>
     </Router>
   );

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import axios from 'axios';
 
@@ -65,11 +66,34 @@ const EntryLevelTest = () => {
       [questionIndex]: selectedOption,
     });
   };
+  console.log("Submitting with answers:", userAnswers);
 
-  const handleSubmit = () => {
-    console.log('User answers:', userAnswers);
-    alert("✅ Test submitted! You can now review your answers.");
-  };
+
+  const navigate = useNavigate();
+
+  const handleSubmit = async () => {
+  const answersArray = questions.map((_, index) => userAnswers[index] || '');
+
+  try {
+    const response = await axios.post('http://localhost:5000/api/test/submit', {
+      userAnswers: answersArray,
+    });
+
+    localStorage.setItem('userAnswers', JSON.stringify(answersArray));
+
+    navigate('/review', {
+      state: {
+        questions: response.data.questions, // use enriched data with correctAnswer + match
+        total: response.data.total,
+        correct: response.data.correct,
+        percentage: response.data.percentage,
+      },
+    });
+  } catch (error) {
+    console.error('Submit failed:', error);
+  }
+};
+
 
   return (
     <div className="flex min-h-screen bg-[#1d2333]  text-white">

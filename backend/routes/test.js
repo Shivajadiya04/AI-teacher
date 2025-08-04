@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { OpenAI } = require('openai');
+const axios = require('axios');
+require('dotenv').config();
 
-// Use your OpenRouter API key here
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: 'https://openrouter.ai/api/v1', // Required if you're using OpenRouter
-});
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// POST /api/test/generate
+let lastGeneratedQuestions = []; // ✅ Store last questions temporarily
+
+// ✅ Route: POST /api/test/generate
 router.post('/generate', async (req, res) => {
   const { skills } = req.body;
 
@@ -16,62 +15,135 @@ router.post('/generate', async (req, res) => {
     return res.status(400).json({ error: 'Skills input is required' });
   }
 
-  try {
-    const randomTag = Math.floor(Math.random() * 100000); // force variation
-   const prompt = `
+  const prompt = `
 You are a technical interviewer.
 
-Based on the following skills:[${skills}], generate EXACTLY 30 medium-level multiple-choice interview questions.
+Based on the following skills: [${skills}], generate EXACTLY 20 medium-level multiple-choice interview questions.
 
-Timestamp (for uniqueness): ${Date.now()}
+Timestamp: ${Date.now()}
 
 Guidelines:
-- The questions should collectively cover all the listed skills.
-- Some questions may involve more than one skill if relevant.
+- Cover all the listed skills.
 - Each question must include:
   • "question": string
   • "options": array of 4 strings
-  • "answer": string (must exactly match one of the options)
-- The difficulty should be intermediate.
-- Do NOT include explanations, markdown, or formatting.
-- ONLY return a raw valid JSON array like:
-
+  • "answer": string (must match one of the options)
+  • "explanation": string explaining the correct answer
+- Return a raw valid JSON array like:
 [
   {
-    "question": "Which HTML element is used for inserting a line break?",
-    "options": ["<break>", "<lb>", "<br>", "<line>"],
-    "answer": "<br>"
-  },
-  ...
+    "question": "...",
+    "options": ["...", "...", "...", "..."],
+    "answer": "...",
+    "explanation": "..."
+  }
 ]
 `;
 
+  try {
+    const response = await axios.post(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+      {
+        contents: [
+          {
+            parts: [{ text: prompt }]
+          }
+        ]
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': GEMINI_API_KEY
+        }
+      }
+    );
 
-    const completion = await openai.chat.completions.create({
-      model: 'openai/gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 4000,
-      temperature: 0.8,
-    });
+    let raw = response.data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+raw = raw.trim();
 
-    let raw = completion.choices[0].message.content;
-    raw = raw.trim().replace(/^```(?:json)?\s*|\s*```$/g, '');
+// Remove markdown code block wrappers if any
+if (raw.startsWith('```')) {
+  raw = raw.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+}
 
-    let questions;
-    try {
-      questions = JSON.parse(raw);
-    } catch (jsonErr) {
-      console.error('⚠️ JSON parsing failed. Response was:\n', raw);
-      return res.status(500).json({ error: 'AI response was not valid JSON. Check format or try again.' });
-    }
+// Attempt to extract just the array part if extra text is present
+const match = raw.match(/\[\s*{[\s\S]*}\s*\]/);
 
-    // ✅ Send the questions to the frontend
+if (!match) {
+  console.error('⚠️ No valid JSON array found in response:\n', raw);
+  return res.status(500).json({ error: 'AI response does not contain a valid JSON array.' });
+}
+
+let questions;
+try {
+  questions = JSON.parse(match[0]);
+} catch (jsonErr) {
+  console.error('⚠️ JSON parsing failed. Extracted:\n', match[0]);
+  return res.status(500).json({ error: 'AI response was not valid JSON.' });
+}
+
+
+    lastGeneratedQuestions = questions; // ✅ Store
     res.json({ questions });
-
   } catch (error) {
-    console.error('❌ Error generating test:', error);
+    console.error('❌ Error generating test:', error.response?.data || error.message);
     res.status(500).json({ error: 'Failed to generate test questions' });
   }
+});
+
+// ✅ Route: POST /api/test/submit
+router.post('/submit', (req, res) => {
+  const { userAnswers } = req.body;
+
+  if (!Array.isArray(userAnswers)) {
+    return res.status(400).json({ error: 'userAnswers must be an array' });
+  }
+
+  if (!lastGeneratedQuestions.length) {
+    return res.status(400).json({ error: 'No test questions found. Please generate test first.' });
+  }
+
+  // Normalize for comparison
+  const normalize = (str) =>
+  (typeof str === 'string' ? str : String(str))
+    .replace(/^["']|["']$/g, '') // removes " or ' from start and end
+    .trim()
+    .toLowerCase();
+
+
+  const formattedQuestions = lastGeneratedQuestions.map((q, index) => {
+  const user = userAnswers[index] || '';
+  const correctAnswer = q.answer;
+
+  return {
+    index,
+    question: q.question,
+    options: q.options,
+    correctAnswer,
+    userAnswer: user,
+    match: normalize(user) === normalize(correctAnswer),
+    explanation: q.explanation || 'No explanation provided.',
+  };
+});
+
+
+  // Optional: Calculate score
+  let correctCount = 0;
+
+  lastGeneratedQuestions.forEach((q, i) => {
+    const user = userAnswers[i];
+    if (normalize(user) === normalize(q.answer)) {
+      correctCount++;
+    }
+  });
+
+  res.json({
+  questions: formattedQuestions,
+  total: formattedQuestions.length,
+  correct: formattedQuestions.filter(q => q.match).length,
+  percentage: Math.round((formattedQuestions.filter(q => q.match).length / formattedQuestions.length) * 100)
+  });
+
 });
 
 module.exports = router;
