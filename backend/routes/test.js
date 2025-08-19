@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 require('dotenv').config();
+const authMiddleware = require('../middleware/authMiddleware');
+const User = require('../models/User');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -59,29 +61,28 @@ Guidelines:
     );
 
     let raw = response.data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-raw = raw.trim();
+    raw = raw.trim();
 
-// Remove markdown code block wrappers if any
-if (raw.startsWith('```')) {
-  raw = raw.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
-}
+    // Remove markdown code block wrappers if any
+    if (raw.startsWith('```')) {
+      raw = raw.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+    }
 
-// Attempt to extract just the array part if extra text is present
-const match = raw.match(/\[\s*{[\s\S]*}\s*\]/);
+    // Attempt to extract just the array part if extra text is present
+    const match = raw.match(/\[\s*{[\s\S]*}\s*\]/);
 
-if (!match) {
-  console.error('⚠️ No valid JSON array found in response:\n', raw);
-  return res.status(500).json({ error: 'AI response does not contain a valid JSON array.' });
-}
+    if (!match) {
+      console.error('⚠️ No valid JSON array found in response:\n', raw);
+      return res.status(500).json({ error: 'AI response does not contain a valid JSON array.' });
+    }
 
-let questions;
-try {
-  questions = JSON.parse(match[0]);
-} catch (jsonErr) {
-  console.error('⚠️ JSON parsing failed. Extracted:\n', match[0]);
-  return res.status(500).json({ error: 'AI response was not valid JSON.' });
-}
-
+    let questions;
+    try {
+      questions = JSON.parse(match[0]);
+    } catch (jsonErr) {
+      console.error('⚠️ JSON parsing failed. Extracted:\n', match[0]);
+      return res.status(500).json({ error: 'AI response was not valid JSON.' });
+    }
 
     lastGeneratedQuestions = questions; // ✅ Store
     res.json({ questions });
@@ -91,8 +92,8 @@ try {
   }
 });
 
-// ✅ Route: POST /api/test/submit
-router.post('/submit', (req, res) => {
+// ✅ Route: POST /api/test/submit (Now also saves marks in DB)
+router.post('/submit', authMiddleware, async (req, res) => {
   const { userAnswers } = req.body;
 
   if (!Array.isArray(userAnswers)) {
@@ -103,47 +104,43 @@ router.post('/submit', (req, res) => {
     return res.status(400).json({ error: 'No test questions found. Please generate test first.' });
   }
 
-  // Normalize for comparison
   const normalize = (str) =>
-  (typeof str === 'string' ? str : String(str))
-    .replace(/^["']|["']$/g, '') // removes " or ' from start and end
-    .trim()
-    .toLowerCase();
-
+    (typeof str === 'string' ? str : String(str))
+      .replace(/^["']|["']$/g, '')
+      .trim()
+      .toLowerCase();
 
   const formattedQuestions = lastGeneratedQuestions.map((q, index) => {
-  const user = userAnswers[index] || '';
-  const correctAnswer = q.answer;
+    const user = userAnswers[index] || '';
+    const correctAnswer = q.answer;
 
-  return {
-    index,
-    question: q.question,
-    options: q.options,
-    correctAnswer,
-    userAnswer: user,
-    match: normalize(user) === normalize(correctAnswer),
-    explanation: q.explanation || 'No explanation provided.',
-  };
-});
-
-
-  // Optional: Calculate score
-  let correctCount = 0;
-
-  lastGeneratedQuestions.forEach((q, i) => {
-    const user = userAnswers[i];
-    if (normalize(user) === normalize(q.answer)) {
-      correctCount++;
-    }
+    return {
+      index,
+      question: q.question,
+      options: q.options,
+      correctAnswer,
+      userAnswer: user,
+      match: normalize(user) === normalize(correctAnswer),
+      explanation: q.explanation || 'No explanation provided.',
+    };
   });
+
+  const correctCount = formattedQuestions.filter(q => q.match).length;
+  const percentage = Math.round((correctCount / formattedQuestions.length) * 100);
+
+  // ✅ Save marks to DB for logged-in user
+  try {
+    await User.findByIdAndUpdate(req.user.id, { marksObtained: percentage });
+  } catch (err) {
+    console.error('❌ Error saving marks:', err);
+  }
 
   res.json({
-  questions: formattedQuestions,
-  total: formattedQuestions.length,
-  correct: formattedQuestions.filter(q => q.match).length,
-  percentage: Math.round((formattedQuestions.filter(q => q.match).length / formattedQuestions.length) * 100)
+    questions: formattedQuestions,
+    total: formattedQuestions.length,
+    correct: correctCount,
+    percentage
   });
-
 });
 
 module.exports = router;
