@@ -506,7 +506,7 @@ const Landing = () => {
           
           <li className="hover:text-[#a855f7] cursor-pointer">Job Details</li>
           <li className="hover:text-[#a855f7] cursor-pointer">Roadmap</li>
-          <li className="hover:text-[#a855f7] cursor-pointer">Dashboard</li>
+          <li className="hover:text-[#a855f7] cursor-pointer"> <Link to="/dashboard">Dashboard</Link></li>
         </ul>
       </nav>
 

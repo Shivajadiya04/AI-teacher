@@ -5,7 +5,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import Sidebar from './components/Sidebar';
+//import Sidebar from './components/Sidebar';
 import JobRole from './pages/JobRole';
 import HomePage from './pages/HomePage';
 import EntryLevelTest from './pages/EntryLevelTest';

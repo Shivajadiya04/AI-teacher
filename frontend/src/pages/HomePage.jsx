@@ -12,7 +12,7 @@ const Home = () => {
           <li className="hover:text-indigo-600 cursor-pointer">Home</li>
           <li className="hover:text-indigo-600 cursor-pointer">Job Details</li>
           <li className="hover:text-indigo-600 cursor-pointer">Roadmap</li>
-          <li className="hover:text-indigo-600 cursor-pointer">Dashboard</li>
+          <li className="hover:text-indigo-600 cursor-pointer"> <Link to="/dashboard">Dashboard</Link></li>
         </ul>
       </nav>
 
