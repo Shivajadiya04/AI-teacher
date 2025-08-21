@@ -29,8 +29,11 @@ const JobRole = () => {
     setResult({ matched, lacking });
     setCompared(true);
 
-    // 💾 Save lacking skills in localStorage
+    // 💾 Save to localStorage (extra info for roadmap)
     localStorage.setItem('skillsYouHave', JSON.stringify(matched));
+    localStorage.setItem('skillsYouLack', JSON.stringify(lacking));
+    localStorage.setItem('jobRole', formData.jobRole);
+    localStorage.setItem('companyName', formData.companyName);
   };
 
   const handleTestRedirect = () => {

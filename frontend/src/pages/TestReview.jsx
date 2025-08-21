@@ -1,28 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 
 const TestReview = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [userAnswers, setUserAnswers] = useState({});
+  const [score, setScore] = useState(null);
 
-  // ✅ Normalize function now removes quotes + trims + lowercases
   const normalize = (str) =>
     (typeof str === 'string' ? str : String(str))
       .replace(/^["']|["']$/g, '')
       .trim()
       .toLowerCase();
 
+  // ✅ Ab backend ko dobara call nahi karenge, direct location.state ka use karenge
   useEffect(() => {
-    const savedAnswers = JSON.parse(localStorage.getItem('userAnswers')) || {};
     if (location.state?.questions) {
       setQuestions(location.state.questions);
-      setUserAnswers(savedAnswers);
+      setScore(location.state.percentage);
+      setUserAnswers(
+        JSON.parse(localStorage.getItem('userAnswers')) || {}
+      );
     }
   }, [location.state]);
 
-  if (!questions.length || Object.keys(userAnswers).length === 0) {
+  if (!questions.length) {
     return <div className="text-white p-10">No review data available.</div>;
   }
 
@@ -31,32 +36,21 @@ const TestReview = () => {
       <Sidebar />
       <div className="ml-64 w-full p-10">
         <h1 className="text-3xl font-bold mb-6">Review Your Answers</h1>
+
         {/* 🧠 Score Summary */}
-              
         <div className="bg-[#1E293B] p-4 rounded shadow mb-4 text-sm flex gap-6 flex-wrap">
-          <p className="text-green-400 font-medium">✅ Correct: {
-            questions.filter((q, i) =>
-              normalize(userAnswers[i]) === normalize(q.correctAnswer)
-            ).length
-          }</p>
-
-          <p className="text-red-400 font-medium">❌ Incorrect: {
-            questions.filter((q, i) =>
-              userAnswers[i] && normalize(userAnswers[i]) !== normalize(q.correctAnswer)
-            ).length
-          }</p>
-
-          <p className="text-blue-400 font-medium">⚠ Unanswered: {
-            questions.filter((_, i) => !userAnswers[i] || userAnswers[i].trim() === '').length
-          }</p>
-
-          <p className="text-yellow-400 font-medium">🧠 Score: {
-            Math.round(
-              (questions.filter((q, i) =>
-                normalize(userAnswers[i]) === normalize(q.correctAnswer)
-              ).length / questions.length) * 100
-            ) + '%'
-          }</p>
+          <p className="text-green-400 font-medium">
+            ✅ Correct: {questions.filter(q => q.match).length}
+          </p>
+          <p className="text-red-400 font-medium">
+            ❌ Incorrect: {questions.filter(q => !q.match && q.userAnswer).length}
+          </p>
+          <p className="text-blue-400 font-medium">
+            ⚠ Unanswered: {questions.filter(q => !q.userAnswer || q.userAnswer.trim() === '').length}
+          </p>
+          <p className="text-yellow-400 font-medium">
+            🧠 Score: {score !== null ? `${score}%` : '...'}
+          </p>
         </div>
 
         {/* 🎨 Color Legend */}
@@ -79,32 +73,18 @@ const TestReview = () => {
           </div>
         </div>
 
-
-
+        {/* Question List */}
         <div className="space-y-6 max-w-4xl overflow-y-auto max-h-[75vh] pr-2 scrollbar-thin scrollbar-thumb-transparent">
           {questions.map((q, index) => {
-            const userAnswer = userAnswers[index] || '';
-            const correctAnswer = q.correctAnswer;
-            const isUnanswered = !userAnswer.trim();
-            const isCorrect = normalize(userAnswer) === normalize(correctAnswer);
-
-              console.log({
-              index,
-              question: q.question,
-              userAnswer: normalize(userAnswer),
-              correctAnswer: normalize(correctAnswer),
-              match: normalize(userAnswer) === normalize(correctAnswer),
-            });
-
+            const isUnanswered = !q.userAnswer?.trim();
+            const isCorrect = q.match;
 
             return (
               <div key={index} className="bg-[#1E293B] p-4 rounded shadow relative">
-                {/* Question with right-side status */}
                 <div className="flex justify-between items-start">
                   <p className="font-semibold mb-4">
                     {index + 1}. {q.question}
                   </p>
-
                   <div>
                     {isUnanswered ? (
                       <span className="text-blue-400 font-medium">⚠️ Unanswered</span>
@@ -119,22 +99,19 @@ const TestReview = () => {
                 {/* Options */}
                 <div className="grid grid-cols-2 gap-2">
                   {q.options.map((opt, i) => {
-                    const normalizedOpt = normalize(opt);
-                    const selected = normalize(userAnswer) === normalizedOpt;
-                    const correct = normalize(correctAnswer) === normalizedOpt;
+                    const selected = normalize(q.userAnswer) === normalize(opt);
+                    const correct = normalize(q.correctAnswer) === normalize(opt);
 
                     let styles = 'border border-gray-600';
-
                     if (selected && correct) {
-                      styles = 'border-green-500 bg-green-800/30'; // correct selection
+                      styles = 'border-green-500 bg-green-800/30';
                     } else if (selected && !correct) {
-                      styles = 'border-red-500 bg-red-800/30'; // wrong selection
+                      styles = 'border-red-500 bg-red-800/30';
                     } else if (!selected && correct) {
-                      styles = 'border-green-500 bg-green-800/20'; // correct answer not selected
+                      styles = 'border-green-500 bg-green-800/20';
                     } else if (isUnanswered && correct) {
-                      styles = 'border-blue-500 bg-blue-800/20'; // unattempted, highlight correct
+                      styles = 'border-blue-500 bg-blue-800/20';
                     }
-
 
                     return (
                       <div key={i} className={`p-2 rounded ${styles}`}>
@@ -153,11 +130,6 @@ const TestReview = () => {
                   ) : (
                     <p className="text-red-400 font-medium">❌ Your answer was incorrect.</p>
                   )}
-
-                  {/* <p className="text-green-400">
-                    ✔ Correct Answer: <strong>{correctAnswer}</strong>
-                  </p> */}
-
                   <p className="text-[#CBD5E1] mt-1">
                     <strong>Explanation:</strong> {q.explanation || 'No explanation provided.'}
                   </p>
@@ -166,6 +138,15 @@ const TestReview = () => {
             );
           })}
         </div>
+
+        <button
+          onClick={() => {
+            navigate('/roadmap');
+          }}
+          className="mt-6 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-6 py-2 rounded font-semibold"
+        >
+          Next
+        </button>
       </div>
     </div>
   );

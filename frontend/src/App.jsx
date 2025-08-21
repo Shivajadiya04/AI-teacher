@@ -10,6 +10,7 @@ import JobRole from './pages/JobRole';
 import HomePage from './pages/HomePage';
 import EntryLevelTest from './pages/EntryLevelTest';
 import TestReview from './pages/TestReview';
+import GenerateRoadmap from './pages/GenerateRoadmap';
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
         <Route path="/home" element={<HomePage />} />
         <Route path="/entry-level-test" element={<EntryLevelTest />} />
         <Route path="/review" element={<TestReview />} />
+        <Route path="/roadmap" element={<GenerateRoadmap />} />
       </Routes>
     </Router>
   );
