@@ -5,7 +5,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const testRoutes = require('./routes/test'); // ✅ Import test routes
 const roadmapRoutes = require('./routes/roadmap');
-// const roadmapRoutes = require('./routes/roadmap');
+const savedRoadmapRoutes = require('./routes/savedroadmaproutes')
 
 const app = express();
 
@@ -21,6 +21,7 @@ mongoose.connect(process.env.MONGODB_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/test', testRoutes); // ✅ Register test route
 app.use('/api/roadmap', roadmapRoutes); // ✅ new route
+app.use('/api/saved-roadmaps', savedRoadmapRoutes);
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;

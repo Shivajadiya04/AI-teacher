@@ -1,17 +1,14 @@
-// server/utils/llm.js
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+// backend/utils/llm.js
+const fetch = (...args) => import("node-fetch").then(({ default: fetch }) => fetch(...args));
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-// Helper: wait function
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function generateLLMRoadmap(
-  { role, timeline, hoursOfStudy, marksObtained, skillsHave = [], skillsLack = [] },
-  retryCount = 0
-) {
+async function generateLLMRoadmap({
+  role,
+  timeline,
+  hoursOfStudy,
+  marksObtained,
+  skillsHave = [],
+  skillsLack = []
+}) {
   try {
     const prompt = `
 You are an AI career mentor. Generate a structured learning roadmap for a person preparing for the role of **${role}**.
@@ -27,37 +24,30 @@ Output format:
 - Final outcome (what skills they will have mastered).
 `;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const response = await fetch(`${process.env.OPENAI_BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
 
-    const result = await model.generateContent(prompt);
+    const data = await response.json();
 
-    // Safely extract response
-    const responseText =
-      result?.response?.text?.() ||
-      result?.response?.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n") ||
-      null;
+    console.log("🔍 OpenRouter raw response:", data);
 
-    if (!responseText) {
-      throw new Error("Empty response from Gemini API");
+    if (data.error) {
+      console.error("❌ OpenRouter API Error:", data.error);
+      return "Roadmap generation failed. Please try again later.";
     }
 
-    return responseText;
+    return data.choices?.[0]?.message?.content || "Roadmap generation failed.";
   } catch (err) {
-    // Check if it's a quota (429) error
-    if (err?.status === 429 && retryCount < 3) {
-      const retryAfter =
-        err?.errorDetails?.[0]?.retryDelay?.seconds * 1000 || 40000; // default 40s
-      console.warn(
-        `⚠️ Quota hit (429). Retrying in ${retryAfter / 1000}s... [Attempt ${retryCount + 1}]`
-      );
-      await sleep(retryAfter);
-      return generateLLMRoadmap(
-        { role, timeline, hoursOfStudy, marksObtained, skillsHave, skillsLack },
-        retryCount + 1
-      );
-    }
-
-    console.error("❌ LLM Error in generateLLMRoadmap:", err?.response?.error || err);
+    console.error("❌ LLM Error:", err);
     return "Roadmap generation failed. Please try again later.";
   }
 }

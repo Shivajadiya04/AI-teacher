@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
+import { jsPDF } from "jspdf"; 
+import { Save } from "lucide-react"; // ✅ Save icon
 
 const GenerateRoadmap = () => {
   const [formData, setFormData] = useState({
@@ -11,9 +13,10 @@ const GenerateRoadmap = () => {
     skillsLack: [],
   });
 
-  const [roadmap, setRoadmap] = useState(""); // ✅ roadmap ko store karne ke liye
+  const [roadmap, setRoadmap] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDirectAccess, setIsDirectAccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // 🔹 Load saved data if available
   useEffect(() => {
@@ -31,9 +34,9 @@ const GenerateRoadmap = () => {
         skillsHave: savedSkillsHave,
         skillsLack: savedSkillsLack,
       });
-      setIsDirectAccess(false); 
+      setIsDirectAccess(false);
     } else {
-      setIsDirectAccess(true); 
+      setIsDirectAccess(true);
     }
   }, []);
 
@@ -41,6 +44,7 @@ const GenerateRoadmap = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ✅ Generate roadmap
   const handleGenerate = async () => {
     try {
       setIsLoading(true);
@@ -60,7 +64,7 @@ const GenerateRoadmap = () => {
       const data = await res.json();
 
       if (res.ok) {
-        setRoadmap(data.roadmap); // ✅ roadmap state me store ho gaya
+        setRoadmap(data.roadmap);
       } else {
         alert(data.message || "Failed to generate roadmap");
       }
@@ -72,11 +76,65 @@ const GenerateRoadmap = () => {
     }
   };
 
+  // ✅ Save roadmap to DB
+  const handleSave = async () => {
+    if (!roadmap) return alert("No roadmap to save!");
+
+    try {
+      setIsSaving(true);
+      const token = localStorage.getItem("token");
+
+      const res = await fetch("http://localhost:5000/api/saved-roadmaps/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...formData,
+          roadmap,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert("✅ Roadmap saved successfully!");
+      } else {
+        alert(data.message || "Failed to save roadmap");
+      }
+    } catch (err) {
+      console.error("❌ Error saving roadmap:", err);
+      alert("Something went wrong while saving!");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // ✅ Download roadmap as PDF
+  const handleDownloadPDF = () => {
+    if (!roadmap) return alert("No roadmap to download!");
+
+    const doc = new jsPDF();
+    const pageHeight = doc.internal.pageSize.height;
+    const textLines = doc.splitTextToSize(roadmap, 180);
+    let y = 20;
+
+    textLines.forEach((line) => {
+      if (y > pageHeight - 10) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.text(line, 10, y);
+      y += 7;
+    });
+
+    doc.save(`${formData.role || "roadmap"}.pdf`);
+  };
+
   return (
     <div className="flex bg-[#0F172A] text-white min-h-screen">
       <Sidebar />
       <div className="ml-64 w-full p-6 grid grid-cols-2 gap-6">
-        
         {/* LEFT SIDE: Form */}
         <div>
           <h1 className="text-3xl font-bold mb-6">Generate Roadmap</h1>
@@ -170,14 +228,35 @@ const GenerateRoadmap = () => {
           <button
             onClick={handleGenerate}
             disabled={isLoading}
-            className="bg-[#8B5CF6] hover:bg-[#7C3AED] px-6 py-2 rounded text-white font-semibold"
+            className="bg-[#8B5CF6] hover:bg-[#7C3AED] px-6 py-2 rounded text-white font-semibold mr-4"
           >
             {isLoading ? "Generating..." : "Generate"}
           </button>
+
+          {roadmap && (
+            <button
+              onClick={handleDownloadPDF}
+              className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded text-white font-semibold"
+            >
+              Download PDF
+            </button>
+          )}
         </div>
 
         {/* RIGHT SIDE: Roadmap */}
-        <div className="bg-[#1E293B] p-6 rounded-xl shadow-md overflow-y-auto">
+        <div className="relative bg-[#1E293B] p-6 rounded-xl shadow-md h-[600px] overflow-y-scroll">
+          {/* Save Button Icon */}
+          {roadmap && (
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="absolute top-4 right-4 p-2 rounded-full bg-[#8B5CF6] hover:bg-[#7C3AED] transition"
+              title="Save Roadmap"
+            >
+              <Save size={20} />
+            </button>
+          )}
+
           <h2 className="text-2xl font-bold mb-4">📌 Your Roadmap</h2>
           {isLoading && <p>⏳ Please wait, generating roadmap...</p>}
           {!isLoading && roadmap && (
