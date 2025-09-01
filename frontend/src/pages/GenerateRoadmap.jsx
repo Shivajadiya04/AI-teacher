@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
-import { jsPDF } from "jspdf"; 
+import  jsPDF  from "jspdf"; 
 import { Save } from "lucide-react"; // ✅ Save icon
 
 const GenerateRoadmap = () => {

@@ -36,6 +36,8 @@ import DashboardLayout from "../components/DashboardLayout";
 import LineChart from "../components/LineChart";
 import BarChart from "../components/BarChart";
 import DonutChart from "../components/DonutChart";
+import DashboardHeader from "../components/DashboardHeader";
+
 
 const Dashboard = () => {
   const [stats, setStats] = useState({ tasks: 12, points: 450, days: 20 });
@@ -58,7 +60,11 @@ const Dashboard = () => {
   }, []);
 
   return (
+
+    
     <DashboardLayout>
+       {/* Top Header with Profile Pic */}
+     <DashboardHeader /> 
       {/* Welcome */}
       <h1 className="text-3xl font-bold mb-2">Welcome, Shiva 👋</h1>
       <p className="text-gray-600 mb-6">Here’s your live dashboard overview</p>

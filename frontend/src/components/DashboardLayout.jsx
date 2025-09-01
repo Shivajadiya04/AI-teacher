@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import { FaBars, FaTimes, FaChartPie, FaUser, FaSignOutAlt } from "react-icons/fa";
+import { NavLink } from "react-router-dom";
 
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const navLinkClasses = ({ isActive }) =>
+    `flex items-center px-4 py-2 rounded cursor-pointer transition ${
+      isActive ? "bg-indigo-900" : "hover:bg-indigo-600"
+    }`;
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -23,14 +29,20 @@ const DashboardLayout = ({ children }) => {
           </button>
         </div>
         <ul className="mt-4 space-y-2">
-          <li className="flex items-center px-4 py-2 hover:bg-indigo-600 cursor-pointer">
-            <FaChartPie className="mr-3" /> Dashboard
+          <li>
+            <NavLink to="/dashboard" className={navLinkClasses} onClick={() => setSidebarOpen(false)}>
+              <FaChartPie className="mr-3" /> Dashboard
+            </NavLink>
           </li>
-          <li className="flex items-center px-4 py-2 hover:bg-indigo-600 cursor-pointer">
-            <FaUser className="mr-3" /> Profile
+          <li>
+            <NavLink to="/profile" className={navLinkClasses} onClick={() => setSidebarOpen(false)}>
+              <FaUser className="mr-3" /> Profile
+            </NavLink>
           </li>
-          <li className="flex items-center px-4 py-2 hover:bg-indigo-600 cursor-pointer">
-            <FaSignOutAlt className="mr-3" /> Logout
+          <li>
+            <NavLink to="/logout" className={navLinkClasses} onClick={() => setSidebarOpen(false)}>
+              <FaSignOutAlt className="mr-3" /> Logout
+            </NavLink>
           </li>
         </ul>
       </aside>
