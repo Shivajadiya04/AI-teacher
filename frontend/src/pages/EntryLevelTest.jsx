@@ -25,9 +25,12 @@ const EntryLevelTest = ({ onTestSubmit }) => {
           return;
         }
 
-        const response = await axios.post('http://localhost:5000/api/test/generate', {
-          skills: skillsArray.join(', '),
-        });
+        const response = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/api/test/generate`,
+          {
+            skills: skillsArray.join(', '),
+          }
+        );
 
         if (response.data.questions?.length > 0) {
           setQuestions(response.data.questions);
@@ -65,9 +68,11 @@ const EntryLevelTest = ({ onTestSubmit }) => {
 
   try {
     const response = await axios.post(
-      'http://localhost:5000/api/test/submit',
+      `${import.meta.env.VITE_API_BASE_URL}/api/test/submit`,
       { userAnswers: answersArray },
-      { headers: { Authorization: `Bearer ${token}` } }
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
     );
 
     const { total, correct, percentage, questions: reviewedQuestions } = response.data;

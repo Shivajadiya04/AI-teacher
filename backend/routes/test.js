@@ -60,6 +60,10 @@ Guidelines:
       }
     );
 
+    console.log('📨 Prompt sent to Gemini:', prompt);
+    console.log('📦 Gemini raw response:', JSON.stringify(response.data, null, 2));
+
+
     let raw = response.data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     raw = raw.trim();
 
