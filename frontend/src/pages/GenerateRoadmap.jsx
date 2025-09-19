@@ -5,13 +5,14 @@ import { Save } from "lucide-react"; // ✅ Save icon
 
 const GenerateRoadmap = () => {
   const [formData, setFormData] = useState({
-    role: "",
-    timeline: "",
-    hoursOfStudy: "",
-    marksObtained: "",
-    skillsHave: [],
-    skillsLack: [],
-  });
+  title: "", // ✅ NEW
+  role: "",
+  timeline: "",
+  hoursOfStudy: "",
+  marksObtained: "",
+  skillsHave: [],
+  skillsLack: [],
+});
 
   const [roadmap, setRoadmap] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,13 +28,14 @@ const GenerateRoadmap = () => {
 
     if (savedRole || savedSkillsHave.length > 0 || savedSkillsLack.length > 0 || savedMarks) {
       setFormData({
-        role: savedRole || "",
-        timeline: "",
-        hoursOfStudy: "",
-        marksObtained: savedMarks || "",
-        skillsHave: savedSkillsHave,
-        skillsLack: savedSkillsLack,
+        role: savedRole || '',
+        timeline: '',
+        hoursOfStudy: '',
+        marksObtained: savedMarks || '',
+        skillsHave: savedSkillsHave || [],
+        skillsLack: savedSkillsLack || [],
       });
+
       setIsDirectAccess(false);
     } else {
       setIsDirectAccess(true);
@@ -76,6 +78,11 @@ const GenerateRoadmap = () => {
     }
   };
 
+  console.log('📤 Saving roadmap with:', {
+  ...formData,
+  roadmap   
+  });
+
   // ✅ Save roadmap to DB
   const handleSave = async () => {
     if (!roadmap) return alert("No roadmap to save!");
@@ -83,6 +90,13 @@ const GenerateRoadmap = () => {
     try {
       setIsSaving(true);
       const token = localStorage.getItem("token");
+
+      console.log('📤 Saving roadmap with:', {
+        ...formData,
+        roadmap
+      });
+
+      console.log("📤 Saving roadmap with title:", formData.title);
 
       const res = await fetch("http://localhost:5000/api/saved-roadmaps/save", {
         method: "POST",
@@ -93,8 +107,9 @@ const GenerateRoadmap = () => {
         body: JSON.stringify({
           ...formData,
           roadmap,
-        }),
-      });
+        })
+
+      }); 
 
       const data = await res.json();
       if (res.ok) {
@@ -141,11 +156,22 @@ const GenerateRoadmap = () => {
 
           {/* Role */}
           <div className="mb-4">
+            <div className="mb-4">
+              <label className="block mb-1">Roadmap Title</label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title || ''}
+                onChange={handleChange}
+                className="w-full p-3 rounded bg-[#1E293B]"
+              />
+            </div>
+
             <label className="block mb-1">Role</label>
             <input
               type="text"
               name="role"
-              value={formData.role}
+              value={formData.role || ''}
               onChange={handleChange}
               disabled={!isDirectAccess && formData.role}
               className="w-full p-3 rounded bg-[#1E293B]"
@@ -158,7 +184,7 @@ const GenerateRoadmap = () => {
             <input
               type="number"
               name="timeline"
-              value={formData.timeline}
+              value={formData.timeline || ''}
               onChange={handleChange}
               className="w-full p-3 rounded bg-[#1E293B]"
             />
@@ -170,7 +196,7 @@ const GenerateRoadmap = () => {
             <input
               type="number"
               name="hoursOfStudy"
-              value={formData.hoursOfStudy}
+              value={formData.hoursOfStudy || ''}
               onChange={handleChange}
               className="w-full p-3 rounded bg-[#1E293B]"
             />
@@ -182,7 +208,7 @@ const GenerateRoadmap = () => {
             <input
               type="text"
               name="marksObtained"
-              value={formData.marksObtained}
+              value={formData.marksObtained || ''}
               onChange={handleChange}
               disabled={isDirectAccess}
               className="w-full p-3 rounded bg-[#1E293B]"

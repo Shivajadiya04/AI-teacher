@@ -5,16 +5,13 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-//import Sidebar from './components/Sidebar';
 import JobRole from './pages/JobRole';
 import HomePage from './pages/HomePage';
 import EntryLevelTest from './pages/EntryLevelTest';
 import TestReview from './pages/TestReview';
 import GenerateRoadmap from './pages/GenerateRoadmap';
-import Profile from "./components/profile"; // 👈 because it's in components folder
-
-
-import { UserProvider } from "./context/UserContext.jsx";
+import Profile from "./components/profileDropdown"; // ✅ updated
+import { UserProvider } from "./context/UserProvider"; // ✅ updated
 
 const App = () => {
   return (
@@ -37,4 +34,4 @@ const App = () => {
   );
 };
 
-export default App; 
+export default App;

@@ -1,12 +1,14 @@
 // src/pages/Login.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // NEW
+import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import bgImage from '../assets/charlesdeluvio-rRWiVQzLm7k-unsplash.jpg';
+import UserContext from '../context/UserContext'; // ✅ Import context
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '', agree: false });
   const [msg, setMsg] = useState('');
-  const navigate = useNavigate(); // NEW
+  const navigate = useNavigate();
+  const { setUser } = useContext(UserContext); // ✅ Get setter from context
 
   const handleChange = (e) => {
     const { name, type, value, checked } = e.target;
@@ -27,13 +29,26 @@ const Login = () => {
       const data = await res.json();
 
       if (data.success) {
-         localStorage.setItem('token', data.token); // ✅ Save the JWT
-         setMsg('Login successful!');
-        navigate('/dashboard'); // ✅ Redirect to protected page
+        // ✅ Save token
+        localStorage.setItem('token', data.token);
+
+        // ✅ Save user in context + localStorage (for persistence)
+        const userInfo = {
+          name: data.user.name,
+          email: data.user.email,
+          profilePic: data.user.profilePic || '', // default empty if none
+        };
+
+        setUser(userInfo); 
+        localStorage.setItem('user', JSON.stringify(userInfo));
+
+        setMsg('Login successful!');
+        navigate('/dashboard'); // ✅ Redirect
       } else {
         setMsg(data.message || 'Login failed.');
       }
-    } catch {
+    } catch (err) {
+      console.error(err);
       setMsg('Something went wrong.');
     }
   };
@@ -41,6 +56,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">
       <div className="bg-gray-800 text-white rounded-2xl shadow-lg flex w-[95%] max-w-6xl overflow-hidden">
+        
         {/* Left Panel with Background Image */}
         <div
           className="w-1/2 bg-cover bg-center relative"

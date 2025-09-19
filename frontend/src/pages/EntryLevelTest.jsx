@@ -1,30 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import axios from 'axios';
+import UserContext from '../context/UserContext';
 
-const EntryLevelTest = () => {
+const EntryLevelTest = ({ onTestSubmit }) => {
   const [questions, setQuestions] = useState([]);
   const [userAnswers, setUserAnswers] = useState({});
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
+  const { user, loading: userLoading } = useContext(UserContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     localStorage.removeItem('entryTestQuestions');
     const fetchQuestions = async () => {
       try {
-        const saved = localStorage.getItem('entryTestQuestions');
-        if (saved) {
-          setQuestions(JSON.parse(saved));
-          setLoading(false);
-          return;
-        }
-
         const storedSkills = localStorage.getItem('skillsYouHave');
-        console.log('🟢 Skills from localStorage:', storedSkills);
-
         const skillsArray = storedSkills ? JSON.parse(storedSkills) : [];
-        console.log('🟡 Skills sent to API:', skillsArray.join(', '));
 
         if (!skillsArray || skillsArray.length === 0) {
           setErrorMsg('No skills found to generate questions.');
@@ -32,13 +25,11 @@ const EntryLevelTest = () => {
           return;
         }
 
-        setQuestions([]);
-
         const response = await axios.post('http://localhost:5000/api/test/generate', {
           skills: skillsArray.join(', '),
         });
 
-        if (response.data.questions && response.data.questions.length > 0) {
+        if (response.data.questions?.length > 0) {
           setQuestions(response.data.questions);
           localStorage.setItem('entryTestQuestions', JSON.stringify(response.data.questions));
         } else {
@@ -56,47 +47,41 @@ const EntryLevelTest = () => {
     fetchQuestions();
   }, []);
 
-  // Handle answer selection
   const handleChange = (questionIndex, selectedOption) => {
-    setUserAnswers({
-      ...userAnswers,
+    setUserAnswers(prev => ({
+      ...prev,
       [questionIndex]: selectedOption,
-    });
+    }));
   };
-
-  const navigate = useNavigate();
 
   const handleSubmit = async () => {
   const answersArray = questions.map((_, index) => userAnswers[index] || '');
-
-  // 🔐 Token lo (login ke baad save hua hona chahiye)
   const token = localStorage.getItem('token');
 
   if (!token) {
-    console.error("❌ No token found — user is not logged in.");
     alert("Please login first. No token found.");
     return;
   }
 
   try {
-    // ✅ Token header ke saath submit
     const response = await axios.post(
       'http://localhost:5000/api/test/submit',
       { userAnswers: answersArray },
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    // (optional) marks save karna ho to yahin ya baad me kar sakte ho
+    const { total, correct, percentage, questions: reviewedQuestions } = response.data;
 
-    localStorage.setItem('userAnswers', JSON.stringify(answersArray));
+    if (typeof onTestSubmit === 'function') {
+      onTestSubmit(); // Refresh dashboard
+    }
 
-    // ✅ Redirect to review
     navigate('/review', {
       state: {
-        questions: response.data.questions,
-        total: response.data.total,
-        correct: response.data.correct,
-        percentage: response.data.percentage,
+        questions: reviewedQuestions,
+        total,
+        correct,
+        percentage,
       },
     });
 
@@ -107,18 +92,19 @@ const EntryLevelTest = () => {
 };
 
 
-
-
   return (
     <div className="flex min-h-screen bg-[#1d2333] text-white">
       <Sidebar />
-
       <div className="flex flex-col items-center ml-[40vh] p-10">
         <div className="w-full max-w-4xl">
           <h1 className="text-3xl font-bold mb-2">Entry-Level Assessment</h1>
           <p className="mb-8 text-[#CBD5E1] max-w-2xl">
             This test is generated based on the <strong>skills you are having</strong> to help you prepare for job interviews.
           </p>
+
+          {!userLoading && user && (
+            <p className="mb-4 text-sm text-gray-400">Logged in as: {user.name}</p>
+          )}
 
           {loading ? (
             <p className="text-white">Loading questions...</p>

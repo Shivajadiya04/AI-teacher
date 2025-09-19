@@ -28,7 +28,7 @@ import './index.css'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import { UserProvider } from "./context/UserContext.jsx"; // <-- yaha impor
+import { UserProvider } from "./context/UserProvider.jsx"; // <-- yaha impor
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

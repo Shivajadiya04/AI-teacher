@@ -1,13 +1,18 @@
-import React from "react";
-import Chart from "react-apexcharts";
+import React from 'react';
+import Chart from 'react-apexcharts';
 
 const DonutChart = ({ data }) => {
+  const series = data.map(d => d.value);
   const options = {
-    chart: { type: 'donut', height: 250 },
-    labels: ['Coding', 'Design', 'Aptitude', 'Logic', 'Other']
+    labels: data.map(d => d.name),
+    legend: {
+      position: 'bottom'
+    }
   };
 
-  return <Chart options={options} series={data} type="donut" height={250} />;
+  return (
+    <Chart type="donut" series={series} options={options} height={300} />
+  );
 };
 
 export default DonutChart;

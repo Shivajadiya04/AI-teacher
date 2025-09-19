@@ -1,22 +1,7 @@
-import React, { createContext, useState } from "react";
+// src/context/UserContext.js
+import { createContext } from 'react';
 
-// Context create
-export const UserContext = createContext();
+const UserContext = createContext(null);
+UserContext.displayName = 'UserContext';
 
-// Context Provider
-export const UserProvider = ({ children }) => {
-  // Signup / login ke time jo data mila hoga (initial state yaha set kar do)
-  const [user, setUser] = useState({
-    name: "Shiva Jadiya",  // Signup se aayega
-    email: "shivajadiya@example.com", // Signup se aayega
-    phone: "",
-    college: "",
-    profilePic: "" // image upload ka link
-  });
-
-  return (
-    <UserContext.Provider value={{ user, setUser }}>
-      {children}
-    </UserContext.Provider>
-  );
-};
+export default UserContext;
