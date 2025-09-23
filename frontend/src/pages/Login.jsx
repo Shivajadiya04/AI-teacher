@@ -1,8 +1,11 @@
 // src/pages/Login.jsx
+import  dotenv from "dotenv";
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import bgImage from '../assets/charlesdeluvio-rRWiVQzLm7k-unsplash.jpg';
 import UserContext from '../context/UserContext'; // ✅ Import context
+
+dotenv.config();
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '', agree: false });
